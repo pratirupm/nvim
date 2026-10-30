@@ -8,15 +8,109 @@ Mason cannot install the Go SDK, Neovim, a C compiler, or Node.js/npm. Install t
 
 - Go toolchain
 - Neovim 0.12 or newer
-- A C compiler, `git`, `curl`, and `tar`
+- A C compiler, `git`, and `curl`
+- `unzip`, `gzip`, and `tar` (GNU tar on Linux)
 - Node.js and `npm` for the Mason-installed HTML/CSS language servers
 - `ripgrep` and `fd` for Telescope
 - `lazygit` (optional, for the `<leader>gg` Git UI)
+- Windows only: PowerShell and 7-Zip for Mason's archive extraction
 
-Then clone this config and launch Neovim once:
+## Linux
+
+### Debian / Ubuntu
 
 ```sh
-git clone <this-repo> ~/.config/nvim
+sudo apt update
+sudo apt install -y build-essential git curl unzip gzip tar nodejs npm ripgrep fd-find golang-go neovim
+# Debian/Ubuntu install the fd binary as fdfind.
+sudo ln -sf /usr/bin/fdfind /usr/local/bin/fd
+```
+
+### Fedora
+
+```sh
+sudo dnf install -y gcc make git curl unzip gzip tar nodejs npm ripgrep fd-find golang neovim
+```
+
+### Fedora Silverblue
+
+Silverblue is immutable, so install packages into the base image with `rpm-ostree` and reboot:
+
+```sh
+sudo rpm-ostree install gcc make git curl unzip gzip tar nodejs npm ripgrep fd-find golang neovim
+systemctl reboot
+```
+
+Alternatively, install Linuxbrew below; it avoids layering packages but still needs the system compiler, `make`, Git, curl, unzip, and tar.
+
+### Arch Linux
+
+```sh
+sudo pacman -S --needed base-devel git curl unzip gzip tar nodejs npm ripgrep fd go neovim lazygit
+```
+
+On other distributions, install the equivalent packages; Linuxbrew below is a fallback.
+
+### Linuxbrew (any distribution)
+
+Install Homebrew, then the tools:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+brew install go neovim node ripgrep fd lazygit
+```
+
+Linuxbrew uses the host compiler; install `gcc`, `make`, `git`, `curl`, `unzip`, and `tar` with your distribution first. Add the `brew shellenv` line to your shell profile if it is not already there.
+
+`lazygit` is optional; install it where your package manager provides it.
+
+## macOS
+
+```sh
+xcode-select --install
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install go neovim node ripgrep fd lazygit
+```
+
+The Xcode command-line tools provide the compiler and `make`; macOS already includes Git, curl, tar, unzip, and gzip.
+
+## Windows
+
+In PowerShell, install the native tools with `winget`:
+
+```powershell
+winget install --id Git.Git -e
+winget install --id GoLang.Go -e
+winget install --id Neovim.Neovim -e
+winget install --id OpenJS.NodeJS.LTS -e
+winget install --id BurntSushi.ripgrep.MSVC -e
+winget install --id sharkdp.fd -e
+winget install --id 7zip.7zip -e
+winget install --id JesseDuffield.lazygit -e
+winget install --id Microsoft.VisualStudio.2022.BuildTools -e
+```
+
+In the Build Tools installer, select **Desktop development with C++**. Native Windows uses `%LOCALAPPDATA%\nvim` for Neovim's config.
+
+For WSL2, run `wsl --install -d Ubuntu` from PowerShell, then follow the Debian/Ubuntu steps inside WSL.
+
+Before cloning, open a new terminal and check `nvim --version` (0.12+) and `go version`; use Linuxbrew or the upstream releases if either is too old.
+
+## Clone the config
+
+Linux, macOS, and WSL2:
+
+```sh
+mkdir -p ~/.config
+git clone https://github.com/pratirupm/nvim.git ~/.config/nvim
+nvim
+```
+
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/pratirupm/nvim.git "$env:LOCALAPPDATA\nvim"
 nvim
 ```
 

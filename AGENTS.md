@@ -28,10 +28,11 @@ Mason cannot install Go, Neovim, a C compiler, or Node/npm. A fresh machine need
 
 - Go toolchain before the first Neovim launch
 - Neovim 0.12+ (`nvim-treesitter` is on `main`)
-- C compiler, `git`, `curl`, `tar`
+- C compiler, `git`, `curl`, `unzip`, `gzip`, and `tar` (GNU tar on Linux)
 - Node.js/npm for Mason's HTML/CSS servers
 - `ripgrep`/`fd` for Telescope
 - `lazygit` optional for `<leader>gg`
+- Windows also needs PowerShell and 7-Zip
 
 First launch installs lazy.nvim plugins and Mason tools after a delay. Parsers not bundled with Neovim (e.g. Go) install when a file of that language opens. Mason's `gopls`/`delve` take precedence over `~/.local/bin` because Mason's bin is prepended to `PATH`; remove them from `lua/plugins/mason.lua` to use external copies.
 
@@ -50,4 +51,4 @@ First launch installs lazy.nvim plugins and Mason tools after a delay. Parsers n
 ## Style
 
 - Follow `.stylua.toml`: 2 spaces, 120 columns, double quotes, no call parentheses (`require "foo"` unless chaining).
-- `README.md` documents user-facing keymaps/UI behavior; update it when they change.
+- `README.md` documents user-facing keymaps/UI behavior and per-OS install commands; update it when they change.

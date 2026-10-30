@@ -46,7 +46,7 @@ Then launch Neovim normally once and let Mason finish, or run `:MasonToolsInstal
 
 The `ms` / `mr` / `md` aliases work in visual mode, so select first with `miw` and then use `ms"`, `mr"'`, or `md"`; repeat the selection before changing or deleting. Normal-mode `ms` / `mr` / `md` remain mark commands; use `ys` / `cs` / `ds` without selecting first.
 
-Yanked text is briefly highlighted. `scrolloff` and `sidescrolloff` are set to 8, `confirm` is enabled, floating windows use rounded borders, swap files are disabled, and undo history is persistent. The file explorer sits on the right and closes after opening a file.
+Yanked text is briefly highlighted. `scrolloff` and `sidescrolloff` are set to 8, `confirm` is enabled, floating windows use rounded borders, swap files are disabled, and undo history is persistent. The file explorer sits on the right and closes after opening a file. Buffer tabs omit per-buffer close buttons; use `<leader>x` to close the current buffer.
 
 Go buffers format on save with `goimports` followed by `golines --max-len=80`. Lua format-on-save is disabled; `:ConformInfo` shows the available formatters.
 

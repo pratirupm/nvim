@@ -5,6 +5,8 @@
 ---@type ChadrcConfig
 local M = {}
 
+require("configs.tabufline").setup()
+
 M.base46 = {
   theme = "kanagawa-dragon",
 }

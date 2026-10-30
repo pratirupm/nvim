@@ -1,3 +1,30 @@
+-- Keep the block's closing bracket visible on the folded line.
+local function fold_virt_text_handler(virt_text, _, end_lnum, width, truncate, ctx)
+  local last_line = vim.trim(vim.api.nvim_buf_get_lines(ctx.bufnr, end_lnum - 1, end_lnum, false)[1] or "")
+  local closing = last_line:match "^[%]%)}]+" or ""
+  local suffix = " ⋯ " .. closing
+  local target_width = math.max(width - vim.fn.strdisplaywidth(suffix), 0)
+  local result = {}
+  local current_width = 0
+
+  for _, chunk in ipairs(virt_text) do
+    local text = chunk[1]
+    local chunk_width = vim.fn.strdisplaywidth(text)
+    if target_width > current_width + chunk_width then
+      table.insert(result, chunk)
+    else
+      text = truncate(text, math.max(target_width - current_width, 0))
+      table.insert(result, { text, chunk[2] })
+      break
+    end
+    current_width = current_width + chunk_width
+  end
+
+  table.insert(result, { " ⋯ ", "NonText" })
+  table.insert(result, { closing, "TSPunctBracket" })
+  return result
+end
+
 return {
   {
     "kevinhwang91/nvim-ufo",
@@ -13,6 +40,7 @@ return {
       provider_selector = function()
         return { "treesitter", "indent" }
       end,
+      fold_virt_text_handler = fold_virt_text_handler,
     },
     config = function(_, opts)
       require("ufo").setup(opts)

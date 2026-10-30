@@ -171,7 +171,7 @@ Tree-sitter textobjects provide Helix-style motions between code structures.
 
 Counts work (`3]f`), and jumps are added to the jumplist. `]c` / `[c` keep the built-in diff-mode change motions. `gf` remains available for the built-in file-under-cursor jump.
 
-Folds use `nvim-ufo` with Treesitter and indentation fallbacks. All folds start open (`foldlevel=99`), and the fold column shows open/closed markers.
+Folds use `nvim-ufo` with Treesitter and indentation fallbacks. All folds start open (`foldlevel=99`), and the fold column shows open/closed markers. A folded block keeps its closing bracket visible at the end of the folded line, for example `func main() { ⋯ }`.
 
 # Tests and debugging
 

@@ -11,6 +11,7 @@ Mason cannot install the Go SDK, Neovim, a C compiler, or Node.js/npm. Install t
 - A C compiler, `git`, and `curl`
 - `unzip`, `gzip`, and `tar` (GNU tar on Linux)
 - Node.js and `npm` for the Mason-installed HTML/CSS language servers
+- Bun (optional; it does not replace `npm` for Mason's npm installer)
 - `ripgrep` and `fd` for Telescope
 - `lazygit` (optional, for the `<leader>gg` Git UI)
 - Windows only: PowerShell and 7-Zip for Mason's archive extraction

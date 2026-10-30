@@ -6,7 +6,7 @@ local id_prefix = "mainTerm_"
 local warned = {}
 
 local function normalize_cwd()
-  return (vim.fn.getcwd():gsub("[/\\]+$", ""))
+  return (vim.fn.getcwd(-1):gsub("[/\\]+$", ""))
 end
 
 local function term_id(cwd)
@@ -14,7 +14,13 @@ local function term_id(cwd)
 end
 
 local function term_opts(cwd)
-  return { pos = "sp", id = term_id(cwd), size = 0.3, cwd = cwd }
+  return {
+    pos = "sp",
+    id = term_id(cwd),
+    size = 0.3,
+    cwd = cwd,
+    termopen_opts = { cwd = cwd },
+  }
 end
 
 local function find_entry(id)
@@ -76,27 +82,59 @@ local function tabs_for_cwd(cwd)
 end
 
 -- A shell with no child process is idle; a child means a command is running.
-local function has_running_process(entry)
+-- If neither pgrep nor ps is available, the state is unknown: keep the shell
+-- rather than kill it.
+local function process_state(entry)
   if not entry or not api.nvim_buf_is_valid(entry.buf) then
-    return false
+    return "idle"
   end
 
   local job = vim.b[entry.buf].terminal_job_id
   if not job then
-    return false
+    return "idle"
   end
 
   local pid = vim.fn.jobpid(job)
   if pid <= 0 then
-    return false
+    return "idle"
   end
 
-  if vim.fn.executable "pgrep" == 0 then
-    return true
+  if vim.fn.executable "pgrep" == 1 then
+    vim.fn.system { "pgrep", "-P", tostring(pid) }
+    local code = vim.v.shell_error
+    if code == 0 then
+      return "running"
+    elseif code ~= 1 then
+      return "unknown"
+    end
+  elseif vim.fn.executable "ps" == 1 then
+    local out = vim.fn.system { "ps", "-o", "pid=", "--ppid", tostring(pid) }
+    if vim.v.shell_error ~= 0 then
+      return "unknown"
+    end
+    if out:gsub("%s+", "") ~= "" then
+      return "running"
+    end
+  else
+    return "unknown"
   end
 
-  vim.fn.system { "pgrep", "-P", tostring(pid) }
-  return vim.v.shell_error == 0
+  -- Bash shell builtins such as `read` have no child process. On Linux the
+  -- shell's wait channel distinguishes an idle prompt (poll/select) from a
+  -- builtin waiting for input, so avoid killing that shell.
+  if vim.fn.has "linux" == 1 and vim.fn.executable "ps" == 1 then
+    local out = vim.fn.system { "ps", "-o", "wchan=", "-p", tostring(pid) }
+    if vim.v.shell_error ~= 0 then
+      return "unknown"
+    end
+    local wchan = out:gsub("%s+", "")
+    if wchan:find("poll", 1, true) or wchan:find("select", 1, true) or wchan:find("epoll", 1, true) then
+      return "idle"
+    end
+    return "running"
+  end
+
+  return "unknown"
 end
 
 function M.toggle()
@@ -129,7 +167,7 @@ function M.guard_close()
   end
 
   local _, entry = find_entry(term_id(cwd))
-  if not entry or not has_running_process(entry) then
+  if not entry or process_state(entry) ~= "running" then
     return true
   end
 
@@ -163,13 +201,13 @@ local function cleanup_terminals()
     if type(entry.id) == "string" and entry.id:find("^" .. id_prefix) then
       local cwd = entry.cwd
       if cwd and tabs_for_cwd(cwd) == 0 and #vim.fn.win_findbuf(entry.buf) == 0 then
-        if has_running_process(entry) then
-          if not warned[entry.buf] then
-            warned[entry.buf] = true
-            vim.notify("Terminal for " .. vim.fn.fnamemodify(cwd, ":t") .. " is still running", vim.log.levels.WARN)
-          end
-        else
+        local state = process_state(entry)
+        if state == "idle" then
           stale[#stale + 1] = { key = key, entry = entry }
+        elseif not warned[entry.buf] then
+          warned[entry.buf] = true
+          local message = state == "running" and "is still running" or "state is unknown; kept hidden"
+          vim.notify("Terminal for " .. vim.fn.fnamemodify(cwd, ":t") .. " " .. message, vim.log.levels.WARN)
         end
       end
     end

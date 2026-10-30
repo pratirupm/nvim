@@ -27,14 +27,14 @@ Personal NvChad v2.5 config for Go/Lua editing. Edit this repo, never `~/.local/
 - `plugins/navigation.lua` customizes nvim-ufo: `treesitter_folds` drops duplicate block folds, and `fold_virt_text_handler` joins wrapped signatures after stripping comments. Keep `enable_get_fold_virt_text = true` and the provider function, or folded signatures break. `]c`/`[c` retain diff motions; `K` peeks folds then falls back to LSP hover. `<C-Space>`/`<BS>` expand/contract treesitter selection (`an`/`in` remain built-ins).
 - `configs/statuscolumn.lua` puts git signs and fold markers in one column (`foldcolumn=0`); a fold marker replaces the sign on fold starts and inherits the GitSigns highlight. Diagnostics render to the right of the line number (`vim.diagnostic.config { signs = false }`).
 - `configs/terminal.lua` owns one persistent bottom terminal per project cwd (`nvchad.term`, id `mainTerm_<sha256(cwd)>`, 30%), shared by tabs on the same cwd: `<leader>tt`, terminal-mode `<C-t>`, `<C-x>` to exit. Setup deletes NvChad's split/float terminal maps. Last-window close swaps in the alternate buffer (E444).
-- `TabClosed` deletes an idle shell but keeps a running one hidden with a warning. `projects.close_tab` calls `guard_close` to block the last project tab while a process runs; detection uses `pgrep -P`, and without `pgrep` the shell is treated as busy. Do not add cross-tab focus or extra terminal maps.
+- `TabClosed` deletes an idle shell but keeps a running one hidden with a warning. `projects.close_tab` calls `guard_close` to block the last project tab while a process runs; detection uses `pgrep -P`/`ps` (and Linux `wchan` for shell builtins), and unknown states are kept hidden. Do not add cross-tab focus or extra terminal maps.
 - Treesitter parsers install on demand from `FileType`; `plugins/treesitter.lua` sets `build = false` to disable NvChad's `TSInstallAll`. Do not switch to `install "all"`. This needs the `tree-sitter` CLI (Mason installs it); pending installs retry after `MasonToolsUpdateCompleted`.
 - `configs/conform.lua`: Go formats on save with `goimports` then `golines --max-len=80`; Lua is not formatted on save. `:ConformInfo` lazy-loads conform.
 - `lazy-lock.json` is generated and committed; do not hand-edit it.
 
 ## Prerequisites
 
-Full per-OS commands are in `README.md`. A fresh machine needs Neovim 0.12+, Go, a C compiler, `git`/`curl`/`unzip`/`gzip`/`tar`, Node/npm (Mason HTML/CSS servers), `ripgrep`/`fd`, and `stylua` for checks; `lazygit` is optional, and Windows also needs PowerShell and 7-Zip. Mason's bin is prepended to `PATH`, so its `gopls`/`delve` shadow `~/.local/bin`; remove them from `lua/plugins/mason.lua` and uninstall the Mason packages to use external copies.
+Full per-OS commands are in `README.md`. A fresh machine needs Neovim 0.12+, Go, a C compiler, `git`/`curl`/`unzip`/`gzip`/`tar`, Node/npm (Mason HTML/CSS servers), Bun (optional; it does not replace `npm` for Mason's npm installer), `ripgrep`/`fd`, and `stylua` for checks; `lazygit` is optional, and Windows also needs PowerShell and 7-Zip. Mason's bin is prepended to `PATH`, so its `gopls`/`delve` shadow `~/.local/bin`; remove them from `lua/plugins/mason.lua` and uninstall the Mason packages to use external copies.
 
 ## Commands
 

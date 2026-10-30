@@ -133,16 +133,28 @@ Then launch Neovim normally once and let Mason finish, or run `:MasonToolsInstal
 | `<leader>dd` | Toggle the diagnostics panel |
 | `<leader>dq` | Toggle the quickfix panel |
 | `<leader>sr` | Search and replace across the project |
+| `u` / `<C-r>` / `U` | Undo / redo / redo (normal mode) |
 | `ys` / `cs` / `ds` / visual `S` | Add/change/delete surrounding characters |
 | `miw` / `maw` | Select inside/around word |
 | `miW` / `maW` | Select inside/around WORD |
 | `ms"` / `mr"'` / `md"` | Helix-style add/change/delete surround (visual mode) |
 
-The `ms` / `mr` / `md` aliases work in visual mode, so select first with `miw` and then use `ms"`, `mr"'`, or `md"`; repeat the selection before changing or deleting. Normal-mode `ms` / `mr` / `md` remain mark commands; use `ys` / `cs` / `ds` without selecting first.
+The `ms` / `mr` / `md` aliases work in visual mode, so select first with `miw` and then use `ms"`, `mr"'`, or `md"`; repeat the selection before changing or deleting. Pressing `m` in visual mode shows those choices in which-key. Normal-mode `ms` / `mr` / `md` remain mark commands; use `ys` / `cs` / `ds` without selecting first.
 
 Yanked text is briefly highlighted. `scrolloff` and `sidescrolloff` are set to 8, `confirm` is enabled, floating windows use rounded borders, swap files are disabled, and undo history is persistent. The file explorer sits on the right and closes after opening a file. Buffer tabs omit per-buffer close buttons and the tabline has no close-all button; use `<leader>x` to close the current buffer.
 
 Go buffers format on save with `goimports` followed by `golines --max-len=80`. Lua format-on-save is disabled; `:ConformInfo` shows the available formatters.
+
+# Terminal
+
+| Keys | Action |
+| --- | --- |
+| `<leader>tt` | Toggle the bottom terminal |
+| `<C-t>` | Toggle the bottom terminal from terminal mode |
+| `<Esc><Esc>` / `<C-x>` | Return to normal mode from terminal mode |
+| `<leader>pt` | Pick a hidden terminal buffer |
+
+There is one persistent bottom terminal. Closing and reopening it reuses the same buffer and shell; if it is the last window, it is replaced by the alternate buffer instead of closing Neovim. If it is visible in another tab, `<leader>tt` focuses that tab instead of opening a duplicate. Exit the shell to start a fresh one on the next toggle.
 
 # Display and indentation
 
@@ -171,7 +183,7 @@ Tree-sitter textobjects provide Helix-style motions between code structures.
 
 Counts work (`3]f`), and jumps are added to the jumplist. `]c` / `[c` keep the built-in diff-mode change motions. `gf` remains available for the built-in file-under-cursor jump.
 
-Folds use `nvim-ufo` with Treesitter and indentation fallbacks. All folds start open (`foldlevel=99`), and the fold column shows open/closed markers. A folded block keeps its closing bracket visible at the end of the folded line, for example `func main() { ⋯ }`.
+Folds use `nvim-ufo` with Treesitter and indentation fallbacks. All folds start open (`foldlevel=99`), and the fold column shows open/closed markers. A folded block keeps its closing bracket visible at the end of the folded line, for example `func main() { ⋯ }`. A wrapped signature is joined onto the folded function line, for example `func New(title string) Task { ⋯ }`.
 
 # Tests and debugging
 

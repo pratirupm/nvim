@@ -13,13 +13,33 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- Code stays unwrapped, but prose is easier to read with soft wrapping.
-vim.api.nvim_create_autocmd("FileType", {
+-- wrap and linebreak are window-local, so apply them per window and clear
+-- them when a code buffer replaces prose in the same window.
+local prose_filetypes = {
+  markdown = true,
+  text = true,
+  gitcommit = true,
+  asciidoc = true,
+}
+
+-- These filetypes manage wrapping themselves.
+local self_wrapping_filetypes = {
+  help = true,
+  man = true,
+}
+
+vim.api.nvim_create_autocmd({ "FileType", "BufWinEnter" }, {
   group = vim.api.nvim_create_augroup("UserWrapText", { clear = true }),
-  pattern = { "markdown", "text", "gitcommit", "asciidoc" },
   desc = "Soft-wrap prose filetypes",
   callback = function()
-    vim.opt_local.wrap = true
-    vim.opt_local.linebreak = true
+    local filetype = vim.bo.filetype
+    if self_wrapping_filetypes[filetype] then
+      return
+    end
+
+    local prose = prose_filetypes[filetype] == true
+    vim.wo.wrap = prose
+    vim.wo.linebreak = prose
   end,
 })
 

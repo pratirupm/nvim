@@ -1,6 +1,17 @@
 -- Overrides for plugins NvChad already provides.
 return {
   {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      triggers = {
+        { "<auto>", mode = "nxso" },
+        { "m", mode = "x" },
+      },
+    },
+  },
+
+  {
     "stevearc/conform.nvim",
     event = "BufWritePre",
     cmd = "ConformInfo",

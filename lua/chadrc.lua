@@ -17,13 +17,7 @@ M.ui = {
   },
 
   tabufline = {
-    order = { "buffers", "tabs", "btns" },
-    modules = {
-      btns = function()
-        local btn = require("nvchad.tabufline.utils").btn
-        return btn(" 󰅖 ", "CloseAllBufsBtn", "CloseAllBufs")
-      end,
-    },
+    order = { "buffers", "tabs" },
   },
 }
 

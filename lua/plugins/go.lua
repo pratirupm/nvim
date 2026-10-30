@@ -15,7 +15,6 @@ return {
       { "<leader>tr", desc = "Run nearest Go test" },
       { "<leader>tf", desc = "Run Go test file" },
       { "<leader>ts", desc = "Toggle test summary" },
-      { "<leader>to", desc = "Open test output" },
       { "<leader>td", desc = "Debug nearest Go test" },
     },
     dependencies = {

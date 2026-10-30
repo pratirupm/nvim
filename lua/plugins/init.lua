@@ -28,6 +28,23 @@ return {
   },
 
   {
+    "lewis6991/gitsigns.nvim",
+    opts = function()
+      local opts = require "nvchad.configs.gitsigns"
+      -- Keep signs to characters that do not depend on a Nerd Font.
+      opts.signs = {
+        add = { text = "│" },
+        change = { text = "│" },
+        delete = { text = "_" },
+        topdelete = { text = "‾" },
+        changedelete = { text = "~" },
+        untracked = { text = "┆" },
+      }
+      return opts
+    end,
+  },
+
+  {
     "neovim/nvim-lspconfig",
     config = function()
       require "configs.lspconfig"

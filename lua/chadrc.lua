@@ -17,7 +17,11 @@ M.ui = {
   },
 
   tabufline = {
-    order = { "buffers", "tabs" },
+    lazyload = false,
+    order = { "tabs" },
+    modules = {
+      tabs = require("configs.tabufline").tabs,
+    },
   },
 }
 

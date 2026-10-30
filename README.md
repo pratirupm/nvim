@@ -134,6 +134,8 @@ Then launch Neovim normally once and let Mason finish, or run `:MasonToolsInstal
 | `<leader>dq` | Toggle the quickfix panel |
 | `<leader>sr` | Search and replace across the project |
 | `u` / `<C-r>` / `U` | Undo / redo / redo (normal mode) |
+| `[<Space>` / `]<Space>` | Add an empty line above/below |
+| `<A-j>` / `<A-k>` | Move the current line or visual selection down/up |
 | `ys` / `cs` / `ds` / visual `S` | Add/change/delete surrounding characters |
 | `miw` / `maw` | Select inside/around word |
 | `miW` / `maW` | Select inside/around WORD |
@@ -141,28 +143,62 @@ Then launch Neovim normally once and let Mason finish, or run `:MasonToolsInstal
 
 The `ms` / `mr` / `md` aliases work in visual mode, so select first with `miw` and then use `ms"`, `mr"'`, or `md"`; repeat the selection before changing or deleting. Pressing `m` in visual mode shows those choices in which-key. Normal-mode `ms` / `mr` / `md` remain mark commands; use `ys` / `cs` / `ds` without selecting first.
 
-Yanked text is briefly highlighted. `scrolloff` and `sidescrolloff` are set to 8, `confirm` is enabled, floating windows use rounded borders, swap files are disabled, and undo history is persistent. The file explorer sits on the right and closes after opening a file. Buffer tabs omit per-buffer close buttons and the tabline has no close-all button; use `<leader>x` to close the current buffer.
+Yanked text is briefly highlighted. `scrolloff` and `sidescrolloff` are set to 8, `confirm` is enabled, floating windows use rounded borders, swap files are disabled, and undo history is persistent. The file explorer sits on the right, closes after opening a file, and shows Git status plus LSP diagnostics in its sign column; diagnostics refresh when the tree opens and after writing a file. Buffer tabs omit per-buffer close buttons and the tabline has no close-all button; use `<leader>x` to close the current buffer.
 
 Go buffers format on save with `goimports` followed by `golines --max-len=80`. Lua format-on-save is disabled; `:ConformInfo` shows the available formatters.
+
+# Files and navigation
+
+| Keys | Action |
+| --- | --- |
+| `<leader>ff` | Find files |
+| `<leader>fa` | Find all files, including hidden and ignored |
+| `<leader>fw` | Live grep |
+| `<leader>fb` | Switch buffers |
+| `<leader>fo` | Recent files |
+| `<leader>e` | Toggle the file tree |
+| `<leader>b` / `<leader>x` | New / close buffer |
+| `<Tab>` / `<S-Tab>` | Next / previous buffer |
+| `gd` / `K` | Definition / hover |
+| `grn` / `gra` / `grr` | Rename / code action / references |
+| `grt` / `gO` | Type definition / document symbols |
+| `]d` / `[d` | Next / previous diagnostic |
+| `<leader>dd` / `<leader>dq` | Diagnostics / quickfix panel |
+| `<leader>fm` / `<leader>/` | Format / toggle comment |
+
+LSP progress such as indexing and workspace loading is shown by `fidget.nvim` in the bottom-right corner.
+
+# Projects and tabs
+
+| Keys | Action |
+| --- | --- |
+| `<leader>pa` | Add a project folder |
+| `<leader>po` | Open the project picker |
+| `<leader>pc` | Close the current tab, warning about unsaved buffers |
+| `<C-]>` / `<C-\>` | Previous / next tab |
+| `gt` / `gT` | Next / previous tab (standard) |
+
+Each project opens in a real tab with a tab-local working directory (`:tcd`) and immediately shows a Telescope file picker at the project root. The top line shows project tabs labeled by their directory name; the line below shows the current tab’s buffers. In the project picker, `<C-d>` removes the selected project. `:ProjectAdd [path]` and `:ProjectOpen` are also available. `<leader>pc` leaves the last tab open.
 
 # Terminal
 
 | Keys | Action |
 | --- | --- |
-| `<leader>tt` | Toggle the bottom terminal |
-| `<C-t>` | Toggle the bottom terminal from terminal mode |
-| `<Esc><Esc>` / `<C-x>` | Return to normal mode from terminal mode |
-| `<leader>pt` | Pick a hidden terminal buffer |
+| `<leader>tt` | Toggle the project terminal |
+| `<C-t>` | Toggle the project terminal from terminal mode |
+| `<C-x>` | Return to normal mode from terminal mode |
 
-There is one persistent bottom terminal. Closing and reopening it reuses the same buffer and shell; if it is the last window, it is replaced by the alternate buffer instead of closing Neovim. If it is visible in another tab, `<leader>tt` focuses that tab instead of opening a duplicate. Exit the shell to start a fresh one on the next toggle.
+There is one persistent bottom terminal per project directory, shared by tabs on the same directory. Tabs for different projects get different shells. Closing and reopening reuses the shell; if the terminal is the last window, it is replaced by the alternate buffer instead of closing Neovim. Closing a project tab removes an idle terminal; `<leader>pc` refuses to close while a process is running and focuses the terminal instead. Exit the shell to start a fresh one on the next toggle.
 
 # Display and indentation
 
 - Every buffer has an 80-column guide (`colorcolumn=80`).
 - Tabs are 4 columns wide everywhere. `expandtab` is on by default, so indentation uses 4 spaces; filetypes that require hard tabs, such as Go and Make, keep tabs at a 4-column width.
 - Relative line numbers are enabled.
+- The tabline shows project tabs only; buffers are shown on the `winbar` line below it. Each project tab uses its own working directory.
 - `cursorlineopt=both` makes `cursorline` highlight both the current line and its line number. The other useful values are `line` (line only) and `number` (number column only).
 - Whitespace is visible: tabs show as `» `, trailing spaces as `·`, and non-breaking spaces as `␣`.
+- Git signs and fold markers share one column: `│`/`_`/`~`/`┆` show changes, while ``/`` show open/closed folds. On a fold-start line with a change, the fold marker takes the Git sign color, so both states fit in one cell. Diagnostics are shown to the right of the line number, and diagnostic signs are disabled in the left column.
 - Code does not wrap. Markdown, plain text, git commit messages, and AsciiDoc soft-wrap.
 - Live substitution previews (`inccommand=split`), case-insensitive command-line completion, `shiftround`, capped completion popups, and smoother scrolling/jumps are enabled.
 
@@ -176,14 +212,16 @@ Tree-sitter textobjects provide Helix-style motions between code structures.
 | `]t` / `[t` | Next/previous type/class |
 | `]a` / `[a` | Next/previous parameter/argument |
 | `]c` / `[c` | Next/previous comment |
+| `<C-Space>` | Expand selection to the parent node |
+| `<BS>` | Contract selection to the child node (visual mode) |
 | `zR` / `zM` | Open/close all folds |
 | `zr` / `zm` | Open folds except kinds / close folds by kind |
 | `za` | Toggle the fold under the cursor |
 | `K` | Peek folded lines, otherwise LSP hover |
 
-Counts work (`3]f`), and jumps are added to the jumplist. `]c` / `[c` keep the built-in diff-mode change motions. `gf` remains available for the built-in file-under-cursor jump.
+Counts work (`3]f`), and jumps are added to the jumplist. `]c` / `[c` keep the built-in diff-mode change motions. `gf` remains available for the built-in file-under-cursor jump. Neovim's `an` / `in` also expand and contract nodes in visual and operator modes.
 
-Folds use `nvim-ufo` with Treesitter and indentation fallbacks. All folds start open (`foldlevel=99`), and the fold column shows open/closed markers. A folded block keeps its closing bracket visible at the end of the folded line, for example `func main() { ⋯ }`. A wrapped signature is joined onto the folded function line, for example `func New(title string) Task { ⋯ }`.
+Folds use `nvim-ufo` with Treesitter and indentation fallbacks. All folds start open (`foldlevel=99`), and the fold level column is hidden (`foldcolumn=0`); fold markers are drawn in the same status column as Git signs (`` open, `` closed), so use `za` to toggle a fold. A folded block keeps its closing bracket visible at the end of the folded line, for example `func main() { ⋯ }`. A wrapped signature is joined onto the folded function line, for example `func New(title string) Task { ⋯ }`.
 
 # Tests and debugging
 
@@ -194,7 +232,6 @@ DAP and Neotest load on first use, so opening a Go file does not start the debug
 | `<leader>tr` | Run the nearest Go test |
 | `<leader>tf` | Run the current Go test file |
 | `<leader>ts` | Toggle the test summary |
-| `<leader>to` | Open test output |
 | `<leader>td` | Debug the nearest Go test |
 | `<F5>` | Continue |
 | `<F10>` / `<F11>` / `<F12>` | Step over / into / out |
@@ -205,20 +242,15 @@ DAP and Neotest load on first use, so opening a Go file does not start the debug
 
 # Multiple cursors
 
-`multicursor.nvim` lazy-loads on its first key. Leader is Space; `<leader>ma` remains Telescope marks.
+`multicursor.nvim` lazy-loads on its first key. Leader is Space.
 
 | Keys | Action |
 | --- | --- |
-| `<leader>m<Up>` / `<leader>m<Down>` | Add a cursor above/below |
-| `<leader>mn` / `<leader>mN` | Add the next/previous match |
-| `<leader>ms` / `<leader>mS` | Skip the next/previous match |
-| `<leader>mA` | Add all matches |
-| `<leader>m<Left>` / `<leader>m<Right>` | Switch the active cursor |
-| `<leader>mq` | Toggle a cursor at the current position |
-| `<leader>mx` | Remove the active cursor |
+| `<leader>mj` / `<leader>mk` | Add a cursor below/above |
+| `<leader>mn` | Add the next match |
+| `<leader>ma` | Add all matches |
 | `<leader>mc` | Clear all cursors |
 | `<Esc>` | Clear cursors while active, or re-enable disabled cursors |
-| `Ctrl+left mouse` | Add cursors with the mouse |
 
 Insert, delete, and visual-mode changes apply to every active cursor.
 

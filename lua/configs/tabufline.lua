@@ -82,4 +82,27 @@ function M.setup()
   utils.style_buf = style_buf
 end
 
+-- Project tabs: show the tab-local cwd basename for each tab instead of a
+-- bare tab number.
+function M.tabs()
+  local utils = require "nvchad.tabufline.utils"
+  local result = {}
+  local current = vim.fn.tabpagenr()
+
+  for nr = 1, vim.fn.tabpagenr "$" do
+    local cwd = vim.fn.getcwd(-1, nr)
+    local name = vim.fn.fnamemodify(cwd, ":t")
+    if name == "" then
+      name = "project"
+    elseif #name > 18 then
+      name = name:sub(1, 17) .. "…"
+    end
+
+    local hl = nr == current and "TabOn" or "TabOff"
+    result[#result + 1] = utils.btn(" " .. name .. " ", hl, "GotoTab", nr)
+  end
+
+  return table.concat(result)
+end
+
 return M

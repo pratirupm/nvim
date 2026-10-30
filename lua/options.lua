@@ -11,6 +11,7 @@ vim.opt.shiftround = true
 -- Display and editing.
 vim.opt.colorcolumn = "80"
 vim.opt.relativenumber = true
+vim.opt.signcolumn = "yes"
 vim.opt.cursorlineopt = "both"
 vim.opt.list = true
 vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
@@ -23,6 +24,12 @@ vim.opt.fillchars:append {
 vim.opt.wrap = false
 vim.opt.linebreak = true
 vim.opt.smoothscroll = true
+
+require("configs.statuscolumn").setup()
+require("configs.projects").setup()
+require("configs.bufferbar").setup()
+
+vim.opt.showtabline = 2
 
 -- Command-line and completion behavior.
 vim.opt.inccommand = "split"

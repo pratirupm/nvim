@@ -40,17 +40,6 @@ return {
     },
     config = function(_, opts)
       require("mason-tool-installer").setup(opts)
-
-      -- If a Go buffer was opened while Mason was installing gopls, restart the
-      -- clients so the newly installed server is picked up.
-      vim.api.nvim_create_autocmd("User", {
-        pattern = "MasonToolsUpdateCompleted",
-        callback = function(args)
-          if args.data and #args.data > 0 then
-            pcall(vim.cmd, "LspRestart")
-          end
-        end,
-      })
     end,
   },
 }

@@ -2,10 +2,22 @@ local api = vim.api
 
 local M = {}
 
-local id = "mainTerm"
-local opts = { pos = "sp", id = id, size = 0.3 }
+local id_prefix = "mainTerm_"
+local warned = {}
 
-local function find_entry()
+local function normalize_cwd()
+  return (vim.fn.getcwd():gsub("[/\\]+$", ""))
+end
+
+local function term_id(cwd)
+  return id_prefix .. vim.fn.sha256(cwd):sub(1, 12)
+end
+
+local function term_opts(cwd)
+  return { pos = "sp", id = term_id(cwd), size = 0.3, cwd = cwd }
+end
+
+local function find_entry(id)
   for key, entry in pairs(vim.g.nvchad_terms or {}) do
     if entry.id == id then
       return key, entry
@@ -51,44 +63,124 @@ local function close_window(entry, win)
   end
 end
 
-local function focus_window(win)
-  local tab = api.nvim_win_get_tabpage(win)
-  if api.nvim_get_current_tabpage() ~= tab then
-    api.nvim_set_current_tabpage(tab)
+local function tabs_for_cwd(cwd)
+  local count = 0
+  for _, tab in ipairs(api.nvim_list_tabpages()) do
+    local tabnr = api.nvim_tabpage_get_number(tab)
+    local tab_cwd = vim.fn.getcwd(-1, tabnr):gsub("[/\\]+$", "")
+    if tab_cwd == cwd then
+      count = count + 1
+    end
   end
-  api.nvim_set_current_win(win)
+  return count
+end
+
+-- A shell with no child process is idle; a child means a command is running.
+local function has_running_process(entry)
+  if not entry or not api.nvim_buf_is_valid(entry.buf) then
+    return false
+  end
+
+  local job = vim.b[entry.buf].terminal_job_id
+  if not job then
+    return false
+  end
+
+  local pid = vim.fn.jobpid(job)
+  if pid <= 0 then
+    return false
+  end
+
+  if vim.fn.executable "pgrep" == 0 then
+    return true
+  end
+
+  vim.fn.system { "pgrep", "-P", tostring(pid) }
+  return vim.v.shell_error == 0
 end
 
 function M.toggle()
-  local key, entry = find_entry()
+  local cwd = normalize_cwd()
+  local id = term_id(cwd)
+  local key, entry = find_entry(id)
+
   if entry and not api.nvim_buf_is_valid(entry.buf) then
     clear_entry(key)
     entry = nil
   end
 
   if entry then
-    local windows = vim.fn.win_findbuf(entry.buf)
-    if #windows > 0 then
-      local current_tab = api.nvim_get_current_tabpage()
-      local current_win
-
-      for _, win in ipairs(windows) do
-        if api.nvim_win_get_tabpage(win) == current_tab then
-          current_win = win
-          break
-        end
-      end
-
-      if current_win then
-        close_window(entry, current_win)
-      else
-        focus_window(windows[1])
-      end
+    local win = vim.fn.bufwinid(entry.buf)
+    if win ~= -1 then
+      close_window(entry, win)
       return
     end
   end
 
-  require("nvchad.term").toggle(opts)
+  require("nvchad.term").toggle(term_opts(cwd))
+end
+
+-- Called by projects.close_tab before closing a tab. Refuse to close the last
+-- tab for a project while its terminal still has a running process.
+function M.guard_close()
+  local cwd = normalize_cwd()
+  if tabs_for_cwd(cwd) > 1 then
+    return true
+  end
+
+  local _, entry = find_entry(term_id(cwd))
+  if not entry or not has_running_process(entry) then
+    return true
+  end
+
+  local current_tab = api.nvim_get_current_tabpage()
+  for _, win in ipairs(vim.fn.win_findbuf(entry.buf)) do
+    if api.nvim_win_get_tabpage(win) ~= current_tab then
+      return true
+    end
+  end
+
+  local win = vim.fn.bufwinid(entry.buf)
+  if win == -1 then
+    require("nvchad.term").toggle(term_opts(cwd))
+    win = vim.fn.bufwinid(entry.buf)
+  end
+
+  if win ~= -1 then
+    api.nvim_set_current_win(win)
+  end
+
+  vim.notify(
+    "Stop the running process in " .. vim.fn.fnamemodify(cwd, ":t") .. " before closing the project tab",
+    vim.log.levels.WARN
+  )
+  return false
+end
+
+local function cleanup_terminals()
+  local stale = {}
+  for key, entry in pairs(vim.g.nvchad_terms or {}) do
+    if type(entry.id) == "string" and entry.id:find("^" .. id_prefix) then
+      local cwd = entry.cwd
+      if cwd and tabs_for_cwd(cwd) == 0 and #vim.fn.win_findbuf(entry.buf) == 0 then
+        if has_running_process(entry) then
+          if not warned[entry.buf] then
+            warned[entry.buf] = true
+            vim.notify("Terminal for " .. vim.fn.fnamemodify(cwd, ":t") .. " is still running", vim.log.levels.WARN)
+          end
+        else
+          stale[#stale + 1] = { key = key, entry = entry }
+        end
+      end
+    end
+  end
+
+  for _, item in ipairs(stale) do
+    if api.nvim_buf_is_valid(item.entry.buf) then
+      api.nvim_buf_delete(item.entry.buf, { force = true })
+    end
+    clear_entry(item.key)
+  end
 end
 
 function M.setup()
@@ -103,7 +195,13 @@ function M.setup()
 
   map("n", "<leader>tt", M.toggle, { desc = "Toggle terminal" })
   map("t", "<C-t>", M.toggle, { desc = "Toggle terminal" })
-  map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Terminal normal mode" })
+
+  api.nvim_create_autocmd("TabClosed", {
+    group = api.nvim_create_augroup("UserProjectTerminals", { clear = true }),
+    callback = function()
+      vim.schedule(cleanup_terminals)
+    end,
+  })
 end
 
 return M
